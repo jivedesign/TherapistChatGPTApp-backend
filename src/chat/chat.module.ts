@@ -5,11 +5,9 @@ import { ChatService } from './chat.service';
 
 const getOpenAiKeyOrThrow = () => {
   const openAiKey = process.env.OPENAI_API_KEY;
-
   if (!openAiKey) {
-    throw new Error('OpenAi API key not specified');
+    throw new Error('OpenAI API key not specified');
   }
-
   return openAiKey;
 };
 
@@ -18,9 +16,7 @@ const buildOpenAiClient = () => {
   const configuration = new Configuration({
     apiKey: openAiKey,
   });
-
   const openAiClient = new OpenAIApi(configuration);
-
   return openAiClient;
 };
 

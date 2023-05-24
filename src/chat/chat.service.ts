@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { throws } from 'assert';
 import {
   CreateCompletionRequest,
   CreateCompletionResponse,
@@ -15,19 +14,17 @@ export class ChatService {
   // Request handling
 
   private mapChatDtoToPrompt(chatDto: ChatDto): string {
-    const situationalContext = `You are a therapist. You are intelligent and witty. You are giving your client advice. Your conversation thus ar has been:`;
+    const situationalContext = `You are a therapist. You are intelligent and witty. You are giving your client advice.
+Your conversation thus far has been:`;
     const chatMessages: string[] = chatDto.messages.map(
-      (message) => `${message.authorName}: "${message.content}`,
+      (message) => `${message.authorName}: "${message.content}"`,
     );
     const inquiryToRespond =
-      'Please respond, folliwng the same conversation format.';
-
+      'Please respond, following the same conversation format.';
     const languageModelPrompt = `
-      ${situationalContext}\n
-      ${chatMessages.join('\n')}\n
-      ${inquiryToRespond}
-    `;
-
+${situationalContext}\n
+${chatMessages.join('\n')}\n
+${inquiryToRespond}`;
     return languageModelPrompt;
   }
 
@@ -41,25 +38,22 @@ export class ChatService {
       max_tokens: 500,
       temperature: 0.5,
     };
-
     return languageModelRequest;
   };
 
-  // Response Handling
+  // Response handling
 
   private getNextMessageOrThrow = (response: CreateCompletionResponse) => {
     const languageModelResponse = response.choices[0].text;
-
-    if (!languageModelResponse) {
-      throw new Error('Cannot get chat dto from language model response');
-    }
-
+    if (!languageModelResponse)
+      throw new Error('Cannot get chat dto from language model response.');
     return languageModelResponse;
   };
 
   private parseResponseIntoChatMessage = (
     languageModelResponse: string,
   ): ChatMessageDto => {
+    // assuming format \nAUTHOR_NAME: "message"
     const [authorNameRaw, messageInQuotes] = languageModelResponse.split(':');
     const authorName = authorNameRaw.trim().replaceAll('\n', '');
     const content = messageInQuotes.trim().replaceAll('"', '');
@@ -82,20 +76,25 @@ export class ChatService {
     );
     const chatDtoAfterResponse = chatBeforeResponse;
     chatDtoAfterResponse.messages.push(responseAsMessage);
-
     return chatDtoAfterResponse;
   }
 
   public async respondToChat(chatDto: ChatDto): Promise<ChatDto> {
     const languageModelRequest = this.buildRequestFromChat(chatDto);
 
-    const languageModelResponse = await this.openApiClient.createCompletion(
-      languageModelRequest,
-    );
+    try {
+      console.log('0--- respondToChat')
 
-    return this.getChatDtoFromLanguageModelResponse(
-      chatDto,
-      languageModelResponse.data,
-    );
+      const languageModelResponse = await this.openApiClient.createCompletion(
+        languageModelRequest,
+      );
+  
+      return this.getChatDtoFromLanguageModelResponse(
+        chatDto,
+        languageModelResponse.data,
+      );
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 }

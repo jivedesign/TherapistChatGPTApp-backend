@@ -17,6 +17,7 @@ export class ChatController {
 
   @Post('/respond')
   respond(@Body() chatDto: ChatDto): Promise<ChatDto> {
+    console.log('0--- RESPOND')
     return this.chatService.respondToChat(chatDto);
   }
 }
